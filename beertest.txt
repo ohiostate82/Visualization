@@ -1,0 +1,166 @@
+ 
+  // y-axis
+  int[] y_values = {0, 5, 10, 15, 20};
+  int min_y,max_y;
+  int med_y = 10;
+  
+
+class Beer {
+  
+  // variables
+  int level;
+  int[] seconds = {0, 15, 30, 45, 60, 75, 90, 105, 120, 150, 180, 210, 240, 300, 360};
+  int[] scores = new int[15];
+  int min, max, med_y;
+  PVector[] pos = new PVector[15];
+  
+  // constructor
+  Beer() {
+  }
+  
+  // functions
+  void display() {
+    if(currLevel == level) {
+      textSize(35);
+      text("Beer "+level+" - Decay by Seconds", width/2, 50);
+      fill(255);
+      
+      for(int i=0; i<pos.length; i++) {
+        ellipse(pos[i].x, pos[i].y, 10, 10); 
+      }
+    }
+    
+    
+  }
+  
+  void setMinMax() {
+     min = min(scores);
+     max = max(scores);
+     min_y = min(y_values);
+     med_y = med_y;
+     max_y = max(y_values);
+  }
+  
+  void setValues() {
+      float graphHeight = (height - ySpacer) - ySpacer;
+      
+      for (int i=0; i<scores.length; i++) {
+        float adjVal = map(scores[i], overallMin, overallMax, 0, graphHeight);
+        pos[i] = new PVector();
+        pos[i].x = xSpacer * (i+1);
+        pos[i].y = (height - ySpacer) - adjVal;
+        println(overallMin);
+        println(overallMax);
+        println(graphHeight);
+        println(pos[i].x);
+        println(pos[i].y);
+      }
+  }
+}
+
+PImage img;
+
+String filename = "beers.csv";
+String[] rawData;
+ArrayList<Beer> allBeers = new ArrayList<Beer>();
+int overallMin, overallMax;
+float xSpacer, ySpacer;
+int currLevel = 0;
+
+
+void setup() {
+  img = loadImage("beer2.jpg");
+    size(1077, 606);
+  processData();
+}
+
+void draw() {
+  image(img, 0,0, 1077, 606);
+  img.loadPixels();
+  image(img, 0, 0);
+  //background(40);
+  drawGUI();
+  for(Beer g : allBeers) {
+    g.display(); 
+  }
+}
+
+void mouseReleased() {
+  if(currLevel == 4) {
+    currLevel = 1;
+  } else {
+    currLevel++; 
+  }
+}
+
+void drawGUI() {
+  stroke(255);
+  fill(255);
+  int[] seconds = {0,15,30,45,60,75,90,105,120,150,180,210,240,300,360};
+  int[] Beers = {1,2,3};
+  
+  // x-axis
+  for(int x=0; x<seconds.length; x++) {
+    float xPos = xSpacer + (xSpacer * x);
+    line(xPos, height - ySpacer, xPos, ySpacer);
+    textAlign(CENTER); // use this instead of adjusting by pixels
+    stroke(255);
+    strokeWeight(5);
+    textSize(14);
+    text(seconds[x], xPos, height - (ySpacer - 20));
+  }
+
+  // y-axis
+  text(max_y, 45, 85);
+  text(med_y, 45, height-300);
+  text(min_y, 45, height-95);
+  
+  // x-label
+  textSize(20);
+  text("Elapsed Time-Seconds",540, 570);
+  
+  // y-label
+  int x2 = 10;
+  int y2 = 320;
+  textSize(20);
+  pushMatrix();
+  translate(x2,y2);
+  rotate(HALF_PI);
+  translate(-x2,-y2);
+  text("Beer Foam Decay", x2,y2);
+  popMatrix();
+}
+
+void processData() {
+  rawData = loadStrings(filename);
+  for(int i=1; i<rawData.length; i+=15) {
+    Beer g = new Beer();
+    String[] firstRow = split(rawData[i], ",");
+    g.level = int(firstRow[0]);
+    for(int j=0; j<15; j++) {
+      String[] thisRow = split(rawData[i+j], ",");
+      g.scores[j] = int(thisRow[2]);
+    }
+    g.setMinMax();
+    allBeers.add(g);
+  } 
+  
+  xSpacer = width / (15+1);
+  ySpacer = 100;
+
+  int[] mins = new int[3];
+  int[] maxs = new int[3];
+  
+  for(int i=0; i<allBeers.size(); i++) {
+    Beer g = allBeers.get(i);
+    mins[i] = g.min;
+    maxs[i] = g.max;
+  }
+  
+  overallMin = min(mins);
+  overallMax = max(maxs);
+  
+  for(Beer g : allBeers) {
+     g.setValues();
+  }
+}
